@@ -5,14 +5,11 @@ import { Client, GatewayIntentBits, Events, PermissionFlagsBits } from 'discord.
 ensureConfig();
 
 const client = new Client({
-  // MessageContent is optional, but helps Discord populate mentions/content in gateway events.
-  // If you enable it in the Developer Portal, it can make mention-dedupe more reliable.
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
 });
 
 async function startupAnnouncerSmokeTest() {
-  // On startup ONLY: find the latest message by each announcer in its channel,
-  // and reply once with "Suite-Seventeen online" + the paired role mention.
+  // On startup ONLY
   for (const [channelId, rule] of CHANNEL_RULES.entries()) {
     if (!channelId || !rule?.roleId) continue;
 
@@ -37,7 +34,7 @@ async function startupAnnouncerSmokeTest() {
         continue;
       }
 
-      // Don’t duplicate the startup test reply if we already posted it for this message.
+      // Don’t duplicate the startup test reply
       const alreadyReplied = messages.find(m =>
         m.author?.id === client.user?.id &&
         m.reference?.messageId === target.id &&
@@ -77,12 +74,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   const roleId = interaction.options.getString('role', true);
 
-  // Single allowlist check sourced from config
   if (!ALLOWED_ROLE_IDS.has(roleId)) {
     return interaction.reply({ content: 'That role is not allowed here.', ephemeral: true });
   }
 
-  const member = interaction.member; // no extra fetch needed
+  const member = interaction.member;
   const hasRole = member.roles.cache.has(roleId);
 
   try {
@@ -101,27 +97,21 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-// Announcer: deduped into one handler using CHANNEL_TO_ROLE
 client.on(Events.MessageCreate, async (message) => {
-  // Never respond to ourselves (prevents loops)
   if (message.author?.id === client.user?.id) return;
 
   const rule = CHANNEL_RULES.get(message.channelId);
-  if (!rule) return; // not a watched channel
+  if (!rule) return;
 
-  // If an announcer ID is configured, ONLY that user/bot should trigger.
-  // (Important: announcers like Phasmophobia are bots, so we cannot blanket-ignore bot messages.)
   if (rule.announcerId) {
     if (message.author.id !== rule.announcerId) return;
   } else {
-    // If no announcer is configured, ignore other bots by default.
     if (message.author.bot) return;
   }
 
   const roleId = rule.roleId;
   if (!roleId) return;
 
-  // don’t double-ping if the role is already mentioned
   if (message.mentions.roles.has(roleId)) return;
 
   try {
