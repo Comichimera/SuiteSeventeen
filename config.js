@@ -43,10 +43,12 @@ export const ROLE_CHOICES = Object.entries(ROLE_IDS)
 
 // Map of channelId -> roleId for your messageCreate announcer behavior
 
-export const CHANNEL_RULES = new Map([
-  [CHANNEL_IDS.MINECRAFT, { roleId: ROLE_IDS.MINECRAFT, announcerId: USER_IDS.MINECRAFT }],
-  [CHANNEL_IDS.PHASMO,    { roleId: ROLE_IDS.PHASMO,    announcerId: USER_IDS.PHASMO }],
-]);
+export const CHANNEL_RULES = new Map(
+  [
+    [CHANNEL_IDS.MINECRAFT, { roleId: ROLE_IDS.MINECRAFT, announcerId: USER_IDS.MINECRAFT }],
+    [CHANNEL_IDS.PHASMO,    { roleId: ROLE_IDS.PHASMO,    announcerId: USER_IDS.PHASMO }],
+  ].filter(([channelId]) => Boolean(channelId))
+);
 
 /**
  * Optional: quick validation to fail fast on missing critical config
